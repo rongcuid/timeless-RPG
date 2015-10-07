@@ -12,22 +12,34 @@ module FRP.Timeless.Framework.TileMap where
 import Control.Lens
 
 type Position = (Int, Int)
-type TileDesc = (String, Int)
--- ^ Description of one tile: (TileSetName, Index)
 
-data TileLayer = TileLayer
-                 { _tileLayerName :: String
-                 , _tileLayerSize :: (Int, Int)
-                 , _tileLayerOffset :: Position
-                 , _tileLayerDesc :: [TileDesc]
-                 }
-
-makeLenses ''TileLayer
-
-data TileMap = TileMap
-               { _tileMapName :: String
-               , _tileMapSize :: (Int, Int)
-               , _tileMapOffset :: [TileLayer]
+-- | Description of tile set
+data TileSetDesc = TileSetDesc
+               { _tileSetName :: String
+               , _tileSetGridSize :: (Int, Int)
+                 -- ^ Grid size in pixels
                }
+                 deriving (Show)
 
-makeLenses ''TileMap
+-- | Description of one tile map layer
+data TileLayerDesc = TileLayerDesc
+                 { _tileLayerName :: String
+                 , _tileLayerTileSet :: TileSetDesc
+                 , _tileLayerSize :: (Int, Int)
+                   -- ^ Layer size in grids
+                 , _tileLayerOffset :: Position
+                   -- ^ Layer offset in grids
+                 , _tileLayerDesc :: [Int]
+                 }
+                   deriving (Show)
+
+-- | Description of one tile map
+data TileMapDesc = TileMapDesc
+               { _tileMapName :: String
+               , _tileMapDesc :: [TileLayerDesc]
+               }
+                 deriving (Show)
+
+makeLenses ''TileSetDesc
+makeLenses ''TileLayerDesc
+makeLenses ''TileMapDesc
