@@ -1,6 +1,7 @@
 module FRP.Timeless.Framework.RPG where
 
 import FRP.Timeless
+import FRP.Timeless.Framework.TileMap
 import qualified SDL as SDL
 
 sTestOutBox :: SDL.Renderer -> Signal s IO () ()
