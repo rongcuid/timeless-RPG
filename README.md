@@ -2,7 +2,7 @@
 
 ## What is Timeless RPG?
 
-Timeless RPG is a RPG game framework codeveloping with [`timeless`][1], SDL2, and Haskell.
+Timeless RPG is a RPG game framework based on [`timeless`][1], SDL2, and Haskell.
 
 ## What is its goal?
 
@@ -14,7 +14,6 @@ Timeless RPG is a RPG game framework codeveloping with [`timeless`][1], SDL2, an
 * To make games easily for non programmers
 * To make games easily for anyone
 * To make games easily for monkeys typing on a typewriter
-* To make games from cats-in-the-box
 
 ## Are you going to abandon this again?
 
@@ -22,7 +21,7 @@ Likely, but not as likely as before. The reason I abandoned my previous attempts
 
 # Building
 
-This package uses Stack. Make sure you have the [`timeless`][1] library downloaded too. Change `stack.yaml` to include the correct relative path to `timeless` library. Hopefully `stack build` will just work.
+This package uses Stack. Make sure you have the [`timeless`][1] library downloaded too. Modify `stack.yaml` to include the correct relative path to `timeless` library. Hopefully `stack build` will just work.
 
 [1]: https://github.com/carldong/timeless
 [2]:http://stackoverflow.com/questions/30905930/what-can-be-a-minimal-example-of-game-written-in-haskell
