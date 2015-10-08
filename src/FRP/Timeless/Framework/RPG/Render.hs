@@ -88,8 +88,8 @@ makeSpriteSheet tm = go 0 tss Map.empty
 
 
 -- | Look up a sprite using GID
-getTile :: Int -> ReaderT SpriteSheet IO (Maybe Sprite)
-getTile gid = ask >>= return . (Map.lookup gid)
+getSprite :: Int -> ReaderT SpriteSheet IO (Maybe Sprite)
+getSprite gid = ask >>= return . (Map.lookup gid)
 
 -- | Renders one tile map layer onto `ren`
 renderTileLayer :: SDL.Renderer -> Layer -> ReaderT (TiledMap) IO ()
