@@ -20,6 +20,7 @@ library
                      , timeless
                      , sdl2 >= 2.0.0
                      , lens
+                     , htiled
   default-language:    Haskell2010
   default-extensions:
                      OverloadedStrings
