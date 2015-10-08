@@ -21,6 +21,9 @@ library
                      , sdl2 >= 2.0.0
                      , lens
                      , htiled
+                     , mtl
+                     , containers
+                     , linear
   default-language:    Haskell2010
   default-extensions:
                      OverloadedStrings
