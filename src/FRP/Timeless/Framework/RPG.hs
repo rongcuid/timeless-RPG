@@ -1,9 +1,18 @@
+-- |
+-- Module:     FRP.Timeless.Framesork.RPG
+-- Copyright:  (c) 2015 Rongcui Dong
+-- License:    BSD3
+-- Maintainer: Rongcui Dong <karl_1702@188.com>
+
 module FRP.Timeless.Framework.RPG where
 
+import Prelude hiding ((.), id)
 import FRP.Timeless
-import FRP.Timeless.Framework.TileMap
 import qualified SDL as SDL
+import qualified Data.Tiled as Tiled
+import FRP.Timeless.Framework.RPG.Render
 
+-- * Tests
 sTestOutBox :: SDL.Renderer -> Signal s IO () ()
 sTestOutBox w = mkKleisli_ $ box w
   where
@@ -12,6 +21,12 @@ sTestOutBox w = mkKleisli_ $ box w
       SDL.clear w
       SDL.present w
       return ()
+
+sTestMap = sLoadMap "examples/desert.tmx"
+      
+-- * App descriptions
+sLoadMap :: FilePath -> Signal s IO () Tiled.TiledMap
+sLoadMap file = mkConstM_ $ Tiled.loadMapFile file
 
 gameBox :: SDL.Renderer -> Signal s IO () ()
 gameBox w = proc _ -> do
