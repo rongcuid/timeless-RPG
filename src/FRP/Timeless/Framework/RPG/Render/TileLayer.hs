@@ -171,17 +171,17 @@ runLayerRenderer (ren,rd,lay,tex) = do
   renderTileLayer ren rd lay
   return tex
 
+
 -- ** Signal
 
 -- | The signal that runs a layer renderer
 sLayerRenderer :: SDL.Window
                -> Int
                -- ^ The layer index
-               -> TileRenderData
-               -> Signal s IO () SDL.Texture
-sLayerRenderer w i rd = lrd >>> mkKleisli_ runLayerRenderer
+               -> Signal s IO TileRenderData SDL.Texture
+sLayerRenderer w i = lrd >>> mkKleisli_ runLayerRenderer
     where
-      lrd = mkConstM_ $ layerRendererData w i rd
+      lrd = mkKleisli_ $ layerRendererData w i 
 
 -- * Utilities
 

@@ -8,14 +8,23 @@ module FRP.Timeless.Framework.RPG.Render where
 
 import Prelude hiding ((.), id)
 import qualified SDL as SDL
-import Data.Tiled
-import qualified Data.Map as Map
-import Data.Map (Map, (!))
-import Control.Monad.Reader
 import Linear
 import Linear.Affine
 import GHC.Word
-import Foreign.C.Types (CInt)
 
 import FRP.Timeless
 import FRP.Timeless.Framework.RPG.Render.TileLayer
+
+renderLayers :: SDL.Renderer
+             -> [SDL.Texture]
+             -> IO ()
+renderLayers renDest txs =
+    mapM_ (\tx -> SDL.copy renDest tx Nothing Nothing) txs
+
+sRenderMap :: SDL.Window
+           -> FilePath
+           -> Signal s IO () ()
+sRenderMap win path = proc _ -> do
+  rd <- mkConstM_ $ loadTileRenderData win path -< ()
+  tx0 <- sLayerRenderer win 0 -< rd
+  returnA -< ()
