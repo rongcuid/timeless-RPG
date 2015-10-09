@@ -1,5 +1,5 @@
 -- |
--- Module:     FRP.Timeless.Framesork.RPG.Render.TileLayer
+-- Module:     FRP.Timeless.Framework.RPG.Render.TileLayer
 -- Copyright:  (c) 2015 Rongcui Dong
 -- License:    BSD3
 -- Maintainer: Rongcui Dong <karl_1702@188.com>
@@ -10,12 +10,10 @@ module FRP.Timeless.Framework.RPG.Render.TileLayer
        , TileRenderData(..)
        , renderTileLayer
        , loadTileRenderData
-       , sLayerRenderer
        )
        where
 
 import Prelude hiding ((.), id)
-import FRP.Timeless
 import qualified SDL as SDL
 import Data.Tiled
 import qualified Data.Map as Map
@@ -26,13 +24,20 @@ import Linear.Affine
 import GHC.Word
 import Foreign.C.Types (CInt)
 import Data.StateVar (($=))
+import qualified SDL.Raw.Types as RAW
+
+import FRP.Timeless
+import FRP.Timeless.Framework.RPG.Render.Types
 
 -- * Data Structures
 
 -- ** Types
 
--- | Layer Renderer data, whose Texture and Renderer are the destination
+-- | Layer Renderer data, whose Texture is the final destination for this layer
 type LayerRendererData = (SDL.Renderer, TileRenderData, Layer, SDL.Texture)
+instance RenderLayer LayerRendererData where
+  renderer = \(r,_,_,_) -> r
+  texture = \(_,_,_,t) -> t
 
 -- | Contains data necessary for render function to work
 data TileRenderData = TileRenderData
@@ -40,7 +45,7 @@ data TileRenderData = TileRenderData
       rdRenderer :: SDL.Renderer
     , rdMapDesc :: TiledMap
     , rdSpriteSheet :: SpriteSheet
-    , rdTextures :: [SDL.Texture]
+    , rdSprites :: [SDL.Surface]
     }
 
 -- | A sprite contains the index of tileset and the rectangle on the
@@ -77,10 +82,11 @@ makeSpriteSheet tm = go 0 tss Map.empty
 -- * Rendering Functions
 
 -- | Renders one tile
-renderTile :: SDL.Renderer
+blitTile :: SDL.Surface
+           -- ^ Destination surface
            -> SpriteSheet
-           -> [SDL.Texture]
-           -- ^ Sprite sheet textures
+           -> [SDL.Surface]
+           -- ^ Sprite sheet surfaces
            -> LayerData
            -> V2 Int
            -- ^ Dimension of map in tiles
@@ -89,7 +95,7 @@ renderTile :: SDL.Renderer
            -> Int
            -- ^ Index
            -> IO ()
-renderTile ren ss txs dat sz@(V2 w h) ts@(V2 tw th) idx = do
+blitTile dest ss surfs dat sz@(V2 w h) ts@(V2 tw th) idx = do
   let key@(xt,yt) = getLayerKey sz idx
       -- ^ Get the key for layer data
       tile = dat ! key
@@ -99,23 +105,23 @@ renderTile ren ss txs dat sz@(V2 w h) ts@(V2 tw th) idx = do
       sprite@(i, rectS) = ss ! gid
       -- ^ Sprite, texture index, source rectangle
       rectSrc = toCRect rectS
-      rectDest = cIntRect (P $ V2 (xt*tw) (yt*th)) (V2 tw th)
-  SDL.copy ren (txs !! i) (Just rectSrc) (Just rectDest)
+      pDest = P $ fmap toCInt $ V2 (xt*tw) (yt*th)
+  SDL.surfaceBlit (surfs !! i) (Just rectSrc) dest (Just pDest)
   return ()
 
--- | Renders one tile map layer onto `ren`
-renderTileLayer :: SDL.Renderer -> TileRenderData -> Layer -> IO ()
-renderTileLayer ren rd lay@(Layer _ _ _ _ _) = do
+-- | Blits one tile map layer onto destination surface
+blitTileLayer :: SDL.Surface -> TileRenderData -> Layer -> IO ()
+blitTileLayer dest rd lay@(Layer _ _ _ _ _) = do
   let ss = rdSpriteSheet rd
       -- ^ Sprite sheet
-      txs = rdTextures rd
-      -- ^ Sprite sheet textures
+      surfs = rdSprites rd
+      -- ^ Sprite sheet surfaces
       (mapSizeT@(V2 w h), tileSize@(V2 tw th)) = getTMDimensions $ rdMapDesc rd
       -- ^ Some dimensions
       nt = w * h
       -- ^ Total number of tiles
       dat = layerData lay
-  renderTile ren ss txs dat mapSizeT tileSize `mapM_` [0..nt]
+  blitTile dest ss surfs dat mapSizeT tileSize `mapM_` [0..nt]
   
 renderTileLayer _ _ _ = error "Only supports tile layer"
 
@@ -124,8 +130,8 @@ renderTileLayer _ _ _ = error "Only supports tile layer"
 -- ** Functions
 
 -- | Loads a TileRenderData from file
-loadTileRenderData :: SDL.Window -> FilePath -> IO TileRenderData
-loadTileRenderData w path = do
+loadTileRenderData :: SDL.Renderer -> FilePath -> IO TileRenderData
+loadTileRenderData ren path = do
   -- | Load the map file
   tm <- loadMapFile path
   -- | Create Sprite sheet
@@ -136,22 +142,16 @@ loadTileRenderData w path = do
   let tsPaths = (iSource . head . tsImages) <$> tss
   -- | Load all images to Surfaces
   surfs <- SDL.loadBMP `mapM` tsPaths
-  -- | Create the Renderer
-  ren <- SDL.createRenderer w (-1) SDL.defaultRenderer
-  -- | Load surfaces to Textures
-  txs <- SDL.createTextureFromSurface ren `mapM` surfs
   -- | Make the TileRenderData
-  return $ TileRenderData ren tm ss txs
+  return $ TileRenderData ren tm ss surfs
 
 -- | Using TileRenderData, create a layer renderer
 layerRendererData :: SDL.Window
+                  -> SDL.Renderer
                   -> Int
                   -> TileRenderData
                   -> IO LayerRendererData
-layerRendererData win i rd = do
-  -- | Destination Renderer
-  renDest <- SDL.createRenderer win (-1)
-         (SDL.RendererConfig SDL.AcceleratedRenderer True)
+layerRendererData win ren i rd = do
   let (V2 w h, V2 tw th) = getTMDimensions $ rdMapDesc rd
       -- ^ Map dimensions
       wp = w * tw
@@ -160,40 +160,32 @@ layerRendererData win i rd = do
       -- ^ Height in pixels
       -- | The layer to be rendered
       lay = ((!! i) . mapLayers . rdMapDesc) rd
-  pFmt <- SDL.getWindowPixelFormat win
-  destTex <- SDL.createTexture renDest pFmt SDL.TextureAccessTarget
-             (fmap fromIntegral $ V2 wp hp)
-  SDL.rendererRenderTarget renDest $= Just destTex
-  return (renDest, rd, lay, destTex)
+  -- pFmt <- SDL.getWindowPixelFormat win
+  -- destTex <- SDL.createTexture ren pFmt SDL.TextureAccessTarget
+  --            (fmap fromIntegral $ V2 wp hp)
+  let mask = V4 0xFF000000 0x00FF0000 0x0000FF00 0x000000FF
+      bd = 32
 
--- | Run a layer renderer
-runLayerRenderer :: LayerRendererData -> IO SDL.Texture
-runLayerRenderer (ren,rd,lay,tex) = do
-  renderTileLayer ren rd lay
-  return tex
-
-
--- ** Signal
-
--- | The signal that runs a layer renderer
-sLayerRenderer :: SDL.Window
-               -> Int
-               -- ^ The layer index
-               -> Signal s IO TileRenderData SDL.Texture
-sLayerRenderer w i = lrd >>> mkKleisli_ runLayerRenderer
-    where
-      lrd = mkKleisli_ $ layerRendererData w i 
+  destSurf <- SDL.createRGBSurface (fmap toCInt $ V2 wp hp) bd mask
+  blitTileLayer destSurf rd lay
+  destTex <- SDL.createTextureFromSurface ren destSurf
+  -- SDL.rendererRenderTarget renDest $= Just destTex
+  return (ren, rd, lay, destTex)
 
 -- * Utilities
 
 -- | Create a `SDL.Rectangle CInt`
 cIntRect :: (Integral n) => Point V2 n -> V2 n -> SDL.Rectangle CInt
 cIntRect pos@(P pv) size =
-  SDL.Rectangle (P $ fmap fromIntegral pv) (fmap fromIntegral size)
+  SDL.Rectangle (P $ fmap toCInt pv) (fmap toCInt size)
 
 -- | Convert an `Integral` rectangle to `CInt`
 toCRect :: (Integral n) => SDL.Rectangle n -> SDL.Rectangle CInt
 toCRect (SDL.Rectangle pos size) = cIntRect pos size
+
+-- | Convert to CInt
+toCInt :: (Integral n) => n -> CInt
+toCInt = fromIntegral
 
 -- | Gets X-Y coordinate from linear, row major, coordinates
 idx2XY :: V2 Int

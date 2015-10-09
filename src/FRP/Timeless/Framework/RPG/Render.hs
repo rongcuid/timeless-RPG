@@ -26,13 +26,7 @@ renderLayers renDest txs = do
     Just tx -> return tx
     Nothing -> error "[BUG]: Somehow renDest does not have render target"
 
-sRenderMap :: SDL.Window
-           -> FilePath
-           -> Signal s IO () SDL.Texture
-sRenderMap win path =
-  proc _ -> do
-    rd <- mkConstM_ $ loadTileRenderData win path -< ()
-    tx0 <- sLayerRenderer win 0 -< rd
-    ren <- arr rdRenderer -< rd
-    txDest <- mkKleisli_ $ uncurry renderLayers -< (ren, [tx0])
-    returnA -< txDest
+-- sRenderMap :: SDL.Window
+--            -> FilePath
+--            -> Signal s IO () SDL.Texture
+-- sRenderMap win path =
