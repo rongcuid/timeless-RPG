@@ -16,8 +16,10 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     FRP.Timeless.Framework.RPG
-                     , FRP.Timeless.Framework.RPG.Render
+  other-modules:
+                       FRP.Timeless.Framework.RPG.Render
                      , FRP.Timeless.Framework.RPG.Render.TileLayer
+                     , FRP.Timeless.Framework.RPG.Render.Types
                      , FRP.Timeless.Framework.RPG.Scene.MapScene
   build-depends:       base >= 4.7 
                      , timeless

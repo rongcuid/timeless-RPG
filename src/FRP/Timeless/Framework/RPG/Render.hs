@@ -4,7 +4,13 @@
 -- License:    BSD3
 -- Maintainer: Rongcui Dong <karl_1702@188.com>
 
-module FRP.Timeless.Framework.RPG.Render where
+module FRP.Timeless.Framework.RPG.Render
+       (
+         -- * Render Action
+         runRenderLayer
+       , runRenderLayerStack
+       )
+       where
 
 import Prelude hiding ((.), id)
 import qualified SDL as SDL
