@@ -10,5 +10,9 @@ module FRP.Timeless.Framework.RPG.Render.Types
 
 import qualified SDL as SDL
 
-class RenderLayer r where
+class RenderLayerClass r where
   texture :: r -> SDL.Texture
+
+data RenderLayer = forall r . RenderLayerClass r => RenderLayer r
+instance RenderLayerClass RenderLayer where
+  texture (RenderLayer l) = texture l

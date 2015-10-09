@@ -19,7 +19,7 @@ import FRP.Timeless.Framework.RPG.Render.Types
 
 
 -- | An IO action to run a `RenderLayer`
-runRenderLayer :: (RenderLayer r) =>
+runRenderLayer :: (RenderLayerClass r) =>
                   SDL.Renderer
                -- ^ Target Renderer
                -> Maybe SDL.Texture
@@ -40,12 +40,12 @@ runRenderLayer ren rt' rl = do
   SDL.rendererRenderTarget ren $= rt
 
 -- | Renders a stack of layers, in order
-runRenderLayerStack :: (RenderLayer r) =>
-                       SDL.Renderer
+runRenderLayerStack :: SDL.Renderer
                     -- ^ Target Renderer
                     -> Maybe SDL.Texture
                     -- ^ Render target, probably a Texture
-                    -> [r]
+                    -> [RenderLayer]
                     -- ^ Stack of `RenderLayer`s
                     -> IO ()
 runRenderLayerStack ren rt' rls = runRenderLayer ren rt' `mapM_` rls
+

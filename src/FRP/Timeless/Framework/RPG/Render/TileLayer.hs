@@ -34,11 +34,6 @@ import FRP.Timeless.Framework.RPG.Render.Types
 
 -- ** Types
 
--- | Layer Renderer data, whose Texture is the final destination for this layer
-type LayerRendererData = (TileRenderData, Layer, SDL.Texture)
-instance RenderLayer LayerRendererData where
-  texture = \(_,_,t) -> t
-
 -- | Contains data necessary for render function to work
 data TileRenderData = TileRenderData
     {
@@ -47,6 +42,11 @@ data TileRenderData = TileRenderData
     , rdSpriteSheet :: SpriteSheet
     , rdSprites :: [SDL.Surface]
     }
+
+-- | Layer Renderer data, whose Texture is the final destination for this layer
+type LayerRendererData = (TileRenderData, Layer, SDL.Texture)
+instance RenderLayerClass LayerRendererData where
+  texture = \(_,_,t) -> t
 
 -- | A sprite contains the index of tileset and the rectangle on the
 -- tileset texture
