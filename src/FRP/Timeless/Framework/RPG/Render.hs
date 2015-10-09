@@ -21,6 +21,13 @@ import GHC.Word
 -- renderMap r m = do
 --   return ()
 
+data RenderData = RenderData
+    {
+      rdMapDesc :: TiledMap
+    , rdSpriteSheet :: SpriteSheet
+    , rdTextures :: [SDL.Texture]
+    }
+
 -- | A sprite contains the index of tileset and the rectangle on the
 -- tileset texture
 type Sprite = (Int, SDL.Rectangle Int)
@@ -29,12 +36,23 @@ type Sprite = (Int, SDL.Rectangle Int)
 type SpriteSheet = Map Int Sprite
 
 -- | A helper to get useful information from tile set
+getTSInfo :: TileSet -> (Int,Int,Int,Int)
 getTSInfo ts =
     let tw = tsTileWidth ts
         th = tsTileHeight ts
         sp = tsSpacing ts
         mar = tsMargin ts
     in (tw,th,sp,mar)
+
+-- | A helper to get dimension information of the tile map
+getTMDimensions :: TiledMap -> (V2 Int, V2 Int)
+getTMDimensions tm =
+  let
+    w = mapWidth tm
+    h = mapHeight tm
+    tw = mapTileWidth tm
+    th = mapTileHeight tm
+  in (V2 w h, V2 tw th)
 
 -- | Get the size in tiles of a tile set
 getTilesetSize :: Tileset -> V2 Int
@@ -87,13 +105,47 @@ makeSpriteSheet tm = go 0 tss Map.empty
     goInsert ss [] = ss
 
 
--- | Look up a sprite using GID
-getSprite :: Int -> ReaderT SpriteSheet IO (Maybe Sprite)
-getSprite gid = ask >>= return . (Map.lookup gid)
+-- | Gets X-Y coordinate from linear, row major, coordinates
+idx2XY :: V2 Int
+       -- ^ Size of map in tiles
+       -> Int
+       -- ^ Linear coordinate (Index)
+       -- | XY coordinate
+       -> V2 Int
+idx2XY (V2 nx _) idx = V2 (idx `rem` nx) (idx `quot` nx)
+
+-- | Gets a tuple for retrieving layer data. Same usage as `idx2XY`
+getLayerKey :: V2 Int -> Int -> (Int, Int)
+getLayerKey size idx = let (x,y) = idx2XY size idx in (x, y)
 
 -- | Renders one tile map layer onto `ren`
-renderTileLayer :: SDL.Renderer -> Layer -> ReaderT (TiledMap) IO ()
-renderTileLayer ren lay@(Layer _ _ _ _ _) = do
-  tm <- ask 
-  let dat = layerData lay
-  return ()
+renderTileLayer :: SDL.Renderer -> RenderData -> Layer -> IO ()
+renderTileLayer ren rd lay@(Layer _ _ _ _ _) = do
+  let
+      -- | Sprite sheet
+      ss = rdSpriteSheet rd
+      -- | Sprite sheet textures
+      txs = rdTextures rd
+      -- | Some dimensions
+      (V2 w h, V2 tw th) = getTMDimensions $ rdMapDesc rd
+      -- | Total number of tiles
+      nt = w * h
+  renderTile ren ss txs Int (V2 w h)
+  
+renderTileLayer _ _ _ = error "Only supports tile layer"
+
+-- | Renders one tile
+renderTile :: SDL.Renderer
+           -> SpriteSheet
+           -> [SDL.Texture]
+           -- ^ Sprite sheet textures
+           -> V2 Int
+           -- ^ Dimension of map in tiles
+           -> Int
+           -- ^ Index
+           -> IO ()
+renderTile ren ss txs sz@(V2 w h) idx = do
+  let
+    key = getLayerKey sz idx
+    sprite = ss ! key
+
