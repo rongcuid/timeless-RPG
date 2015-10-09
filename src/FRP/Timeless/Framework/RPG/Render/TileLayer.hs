@@ -22,10 +22,14 @@ import Linear
 import Linear.Affine
 import GHC.Word
 import Foreign.C.Types (CInt)
+import Data.StateVar (($=))
 
 -- * Data Structures
 
 -- ** Types
+
+-- | Layer Renderer data, whose Texture and Renderer are the destination
+type LayerRendererData = (SDL.Renderer, RenderData, Layer, SDL.Texture)
 
 -- | Contains data necessary for render function to work
 data RenderData = RenderData
@@ -110,6 +114,27 @@ renderTileLayer ren rd lay@(Layer _ _ _ _ _) = do
   renderTile ren ss txs dat mapSizeT tileSize `mapM_` [0..nt]
   
 renderTileLayer _ _ _ = error "Only supports tile layer"
+
+-- * Constructing Renderer
+
+layerRendererData :: SDL.Window -> Layer -> RenderData -> IO LayerRendererData
+layerRendererData win lay rd = do
+  let (V2 w h, V2 tw th) = getTMDimensions $ rdMapDesc rd
+      wp = w * tw
+      hp = h * th
+  pFmt <- SDL.getWindowPixelFormat win
+  ren <- SDL.createRenderer win (-1)
+         (SDL.RendererConfig SDL.AcceleratedRenderer True)
+  destTex <- SDL.createTexture ren pFmt SDL.TextureAccessTarget
+             (fmap fromIntegral $ V2 wp hp)
+  SDL.rendererRenderTarget ren $= Just destTex
+  return (ren, rd, lay, destTex)
+
+layerRenderer :: LayerRendererData -> IO SDL.Texture
+layerRenderer (ren,rd,lay,tex) = do
+  renderTileLayer ren rd lay
+  return tex
+
 
 -- * Utilities
 
