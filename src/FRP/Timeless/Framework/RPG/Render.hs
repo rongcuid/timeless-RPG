@@ -11,22 +11,41 @@ import qualified SDL as SDL
 import Linear
 import Linear.Affine
 import GHC.Word
-import Data.StateVar (get)
+import Data.StateVar (get, ($=))
 
 import FRP.Timeless
 import FRP.Timeless.Framework.RPG.Render.TileLayer
+import FRP.Timeless.Framework.RPG.Render.Types
 
-renderLayers :: SDL.Renderer
-             -> [SDL.Texture]
-             -> IO SDL.Texture
-renderLayers renDest txs = do
-  mapM_ (\tx -> SDL.copy renDest tx Nothing Nothing) txs
-  mtx <- get $ SDL.rendererRenderTarget renDest
-  case mtx of
-    Just tx -> return tx
-    Nothing -> error "[BUG]: Somehow renDest does not have render target"
 
--- sRenderMap :: SDL.Window
---            -> FilePath
---            -> Signal s IO () SDL.Texture
--- sRenderMap win path =
+-- | An IO action to run a `RenderLayer`
+runRenderLayer :: (RenderLayer r) =>
+                  SDL.Renderer
+               -- ^ Target Renderer
+               -> Maybe SDL.Texture
+               -- ^ Render target, probably a Texture
+               -> r
+               -- ^ RenderLayer
+               -> IO ()
+runRenderLayer ren rt' rl = do
+  let srcTex = texture rl
+
+  -- | Save the previous render target
+  rt <- get $ SDL.rendererRenderTarget ren
+  -- | Set render target
+  SDL.rendererRenderTarget ren $= rt'
+  -- | Render
+  SDL.copy ren srcTex Nothing Nothing
+  -- | Restore render target
+  SDL.rendererRenderTarget ren $= rt
+
+-- | Renders a stack of layers, in order
+runRenderLayerStack :: (RenderLayer r) =>
+                       SDL.Renderer
+                    -- ^ Target Renderer
+                    -> Maybe SDL.Texture
+                    -- ^ Render target, probably a Texture
+                    -> [r]
+                    -- ^ Stack of `RenderLayer`s
+                    -> IO ()
+runRenderLayerStack ren rt' rls = runRenderLayer ren rt' `mapM_` rls

@@ -8,8 +8,9 @@ module FRP.Timeless.Framework.RPG.Render.TileLayer
        (
          module Data.Tiled
        , TileRenderData(..)
-       , renderTileLayer
+       , blitTileLayer
        , loadTileRenderData
+       , createLayerRenderer
        )
        where
 
@@ -34,10 +35,9 @@ import FRP.Timeless.Framework.RPG.Render.Types
 -- ** Types
 
 -- | Layer Renderer data, whose Texture is the final destination for this layer
-type LayerRendererData = (SDL.Renderer, TileRenderData, Layer, SDL.Texture)
+type LayerRendererData = (TileRenderData, Layer, SDL.Texture)
 instance RenderLayer LayerRendererData where
-  renderer = \(r,_,_,_) -> r
-  texture = \(_,_,_,t) -> t
+  texture = \(_,_,t) -> t
 
 -- | Contains data necessary for render function to work
 data TileRenderData = TileRenderData
@@ -123,7 +123,7 @@ blitTileLayer dest rd lay@(Layer _ _ _ _ _) = do
       dat = layerData lay
   blitTile dest ss surfs dat mapSizeT tileSize `mapM_` [0..nt]
   
-renderTileLayer _ _ _ = error "Only supports tile layer"
+blitTileLayer _ _ _ = error "Only supports tile Tiled layer"
 
 -- * Constructing Renderer
 
@@ -146,12 +146,12 @@ loadTileRenderData ren path = do
   return $ TileRenderData ren tm ss surfs
 
 -- | Using TileRenderData, create a layer renderer
-layerRendererData :: SDL.Window
+createLayerRenderer :: SDL.Window
                   -> SDL.Renderer
                   -> Int
                   -> TileRenderData
                   -> IO LayerRendererData
-layerRendererData win ren i rd = do
+createLayerRenderer win ren i rd = do
   let (V2 w h, V2 tw th) = getTMDimensions $ rdMapDesc rd
       -- ^ Map dimensions
       wp = w * tw
@@ -170,7 +170,7 @@ layerRendererData win ren i rd = do
   blitTileLayer destSurf rd lay
   destTex <- SDL.createTextureFromSurface ren destSurf
   -- SDL.rendererRenderTarget renDest $= Just destTex
-  return (ren, rd, lay, destTex)
+  return (rd, lay, destTex)
 
 -- * Utilities
 

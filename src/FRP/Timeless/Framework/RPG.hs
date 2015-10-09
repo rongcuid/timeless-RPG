@@ -15,11 +15,10 @@ import FRP.Timeless.Framework.RPG.Render
 -- * Tests
 sTestOutBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
 sTestOutBox w rDest = proc _ -> do
-  tx <- sRenderMap w "desert.tmx" -< ()
-  mkKleisli_ $ box -< tx
+  mkKleisli_ $ box -< ()
   
   where
-    box :: SDL.Texture -> IO ()
+    box :: () -> IO ()
     box _ = do
       SDL.clear rDest
       SDL.present rDest
