@@ -133,7 +133,7 @@ renderTileLayer ren rd lay@(Layer _ _ _ _ _) = do
       nt = w * h
       -- ^ Total number of tiles
       dat = layerData lay
-  renderTile ren ss txs dat mapSizeT tileSize nt
+  renderTile ren ss txs dat mapSizeT tileSize `mapM_` [0..nt]
   
 renderTileLayer _ _ _ = error "Only supports tile layer"
 
