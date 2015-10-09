@@ -7,7 +7,9 @@
 module FRP.Timeless.Framework.RPG.Render.TileLayer
        (
          module Data.Tiled
+       , TileRenderData
        , renderTileLayer
+       , loadTileRenderData
        , sLayerRenderer
        )
        where
@@ -30,10 +32,10 @@ import Data.StateVar (($=))
 -- ** Types
 
 -- | Layer Renderer data, whose Texture and Renderer are the destination
-type LayerRendererData = (SDL.Renderer, RenderData, Layer, SDL.Texture)
+type LayerRendererData = (SDL.Renderer, TileRenderData, Layer, SDL.Texture)
 
 -- | Contains data necessary for render function to work
-data RenderData = RenderData
+data TileRenderData = TileRenderData
     {
       rdMapDesc :: TiledMap
     , rdSpriteSheet :: SpriteSheet
@@ -101,7 +103,7 @@ renderTile ren ss txs dat sz@(V2 w h) ts@(V2 tw th) idx = do
   return ()
 
 -- | Renders one tile map layer onto `ren`
-renderTileLayer :: SDL.Renderer -> RenderData -> Layer -> IO ()
+renderTileLayer :: SDL.Renderer -> TileRenderData -> Layer -> IO ()
 renderTileLayer ren rd lay@(Layer _ _ _ _ _) = do
   let ss = rdSpriteSheet rd
       -- ^ Sprite sheet
@@ -120,8 +122,9 @@ renderTileLayer _ _ _ = error "Only supports tile layer"
 
 -- ** Functions
 
-loadRenderData :: SDL.Window -> FilePath -> IO RenderData
-loadRenderData w path = do
+-- | Loads a TileRenderData from file
+loadTileRenderData :: SDL.Window -> FilePath -> IO TileRenderData
+loadTileRenderData w path = do
   -- | Load the map file
   tm <- loadMapFile path
   -- | Create Sprite sheet
@@ -136,11 +139,15 @@ loadRenderData w path = do
   ren <- SDL.createRenderer w (-1) SDL.defaultRenderer
   -- | Load surfaces to Textures
   txs <- SDL.createTextureFromSurface ren `mapM` surfs
-  -- | Make the RenderData
-  return $ RenderData tm ss txs
+  -- | Make the TileRenderData
+  return $ TileRenderData tm ss txs
 
-layerRendererData :: SDL.Window -> RenderData -> Int -> IO LayerRendererData
-layerRendererData win rd i = do
+-- | Using TileRenderData, create a layer renderer
+layerRendererData :: SDL.Window
+                  -> Int
+                  -> TileRenderData
+                  -> IO LayerRendererData
+layerRendererData win i rd = do
   -- | Destination Renderer
   renDest <- SDL.createRenderer win (-1)
          (SDL.RendererConfig SDL.AcceleratedRenderer True)
@@ -158,21 +165,23 @@ layerRendererData win rd i = do
   SDL.rendererRenderTarget renDest $= Just destTex
   return (renDest, rd, lay, destTex)
 
-layerRenderer :: LayerRendererData -> IO SDL.Texture
-layerRenderer (ren,rd,lay,tex) = do
+-- | Run a layer renderer
+runLayerRenderer :: LayerRendererData -> IO SDL.Texture
+runLayerRenderer (ren,rd,lay,tex) = do
   renderTileLayer ren rd lay
   return tex
 
 -- ** Signal
 
+-- | The signal that runs a layer renderer
 sLayerRenderer :: SDL.Window
-               -> RenderData
                -> Int
                -- ^ The layer index
+               -> TileRenderData
                -> Signal s IO () SDL.Texture
-sLayerRenderer w rd i = lrd >>> mkKleisli_ layerRenderer
+sLayerRenderer w i rd = lrd >>> mkKleisli_ runLayerRenderer
     where
-      lrd = mkConstM_ $ layerRendererData w rd i
+      lrd = mkConstM_ $ layerRendererData w i rd
 
 -- * Utilities
 
