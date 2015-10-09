@@ -102,11 +102,14 @@ blitTile dest ss surfs dat sz@(V2 w h) ts@(V2 tw th) idx = do
       -- ^ Get the tile description
       gid = tileGid tile
       -- ^ Retrieve the sprite ID
-      sprite@(i, rectS) = ss ! gid
+      -- sprite@(i, rectS) = ss ! gid
       -- ^ Sprite, texture index, source rectangle
-      rectSrc = toCRect rectS
-      pDest = P $ fmap toCInt $ V2 (xt*tw) (yt*th)
-  SDL.surfaceBlit (surfs !! i) (Just rectSrc) dest (Just pDest)
+  let mSp = Map.lookup gid ss
+  case mSp of
+    Just sprite@(i,rectS) -> do
+      let rectSrc = toCRect rectS
+      let pDest = P $ fmap toCInt $ V2 (xt*tw) (yt*th)
+      SDL.surfaceBlit (surfs !! i) (Just rectSrc) dest (Just pDest)
   return ()
 
 -- | Blits one tile map layer onto destination surface
