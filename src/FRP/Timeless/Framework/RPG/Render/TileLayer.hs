@@ -120,18 +120,43 @@ renderTileLayer _ _ _ = error "Only supports tile layer"
 
 -- ** Functions
 
-layerRendererData :: SDL.Window -> Layer -> RenderData -> IO LayerRendererData
-layerRendererData win lay rd = do
-  let (V2 w h, V2 tw th) = getTMDimensions $ rdMapDesc rd
-      wp = w * tw
-      hp = h * th
-  pFmt <- SDL.getWindowPixelFormat win
-  ren <- SDL.createRenderer win (-1)
+loadRenderData :: SDL.Window -> FilePath -> IO RenderData
+loadRenderData w path = do
+  -- | Load the map file
+  tm <- loadMapFile path
+  -- | Create Sprite sheet
+  let ss = makeSpriteSheet tm
+  -- | All Tilesets
+  let tss = mapTilesets tm
+  -- | Get all tileset image paths
+  let tsPaths = (iSource . head . tsImages) <$> tss
+  -- | Load all images to Surfaces
+  surfs <- SDL.loadBMP `mapM` tsPaths
+  -- | Create the Renderer
+  ren <- SDL.createRenderer w (-1) SDL.defaultRenderer
+  -- | Load surfaces to Textures
+  txs <- SDL.createTextureFromSurface ren `mapM` surfs
+  -- | Make the RenderData
+  return $ RenderData tm ss txs
+
+layerRendererData :: SDL.Window -> RenderData -> Int -> IO LayerRendererData
+layerRendererData win rd i = do
+  -- | Destination Renderer
+  renDest <- SDL.createRenderer win (-1)
          (SDL.RendererConfig SDL.AcceleratedRenderer True)
-  destTex <- SDL.createTexture ren pFmt SDL.TextureAccessTarget
+  let (V2 w h, V2 tw th) = getTMDimensions $ rdMapDesc rd
+      -- ^ Map dimensions
+      wp = w * tw
+      -- ^ Width in pixels
+      hp = h * th
+      -- ^ Height in pixels
+      -- | The layer to be rendered
+      lay = ((!! i) . mapLayers . rdMapDesc) rd
+  pFmt <- SDL.getWindowPixelFormat win
+  destTex <- SDL.createTexture renDest pFmt SDL.TextureAccessTarget
              (fmap fromIntegral $ V2 wp hp)
-  SDL.rendererRenderTarget ren $= Just destTex
-  return (ren, rd, lay, destTex)
+  SDL.rendererRenderTarget renDest $= Just destTex
+  return (renDest, rd, lay, destTex)
 
 layerRenderer :: LayerRendererData -> IO SDL.Texture
 layerRenderer (ren,rd,lay,tex) = do
@@ -140,10 +165,14 @@ layerRenderer (ren,rd,lay,tex) = do
 
 -- ** Signal
 
-sLayerRenderer :: SDL.Window -> Layer -> RenderData -> Signal s IO () SDL.Texture
-sLayerRenderer w l rd = lrd >>> mkKleisli_ layerRenderer
+sLayerRenderer :: SDL.Window
+               -> RenderData
+               -> Int
+               -- ^ The layer index
+               -> Signal s IO () SDL.Texture
+sLayerRenderer w rd i = lrd >>> mkKleisli_ layerRenderer
     where
-      lrd = mkConstM_ $ layerRendererData w l rd
+      lrd = mkConstM_ $ layerRendererData w rd i
 
 -- * Utilities
 
