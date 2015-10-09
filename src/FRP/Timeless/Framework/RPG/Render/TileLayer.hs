@@ -1,8 +1,9 @@
--- |
--- Module:     FRP.Timeless.Framework.RPG.Render.TileLayer
--- Copyright:  (c) 2015 Rongcui Dong
--- License:    BSD3
--- Maintainer: Rongcui Dong <karl_1702@188.com>
+-- | The tile layer renderer. Note: This code is really a mess,
+-- I will fix this when I need to.
+--
+-- Module: FRP.Timeless.Framework.RPG.Render.TileLayer Copyright: (c)
+-- 2015 Rongcui Dong License: BSD3 Maintainer: Rongcui Dong
+-- <karl_1702@188.com>
 
 module FRP.Timeless.Framework.RPG.Render.TileLayer
        (
@@ -29,6 +30,8 @@ import qualified SDL.Raw.Types as RAW
 
 import FRP.Timeless
 import FRP.Timeless.Framework.RPG.Render.Types
+
+import qualified Debug.Trace as Trace
 
 -- * Data Structures
 
@@ -98,18 +101,24 @@ blitTile :: SDL.Surface
 blitTile dest ss surfs dat sz@(V2 w h) ts@(V2 tw th) idx = do
   let key@(xt,yt) = getLayerKey sz idx
       -- ^ Get the key for layer data
-      tile = dat ! key
+      mTile = Map.lookup key dat
       -- ^ Get the tile description
-      gid = tileGid tile
-      -- ^ Retrieve the sprite ID
-      -- sprite@(i, rectS) = ss ! gid
-      -- ^ Sprite, texture index, source rectangle
-  let mSp = Map.lookup gid ss
-  case mSp of
-    Just sprite@(i,rectS) -> do
-      let rectSrc = toCRect rectS
-      let pDest = P $ fmap toCInt $ V2 (xt*tw) (yt*th)
-      SDL.surfaceBlit (surfs !! i) (Just rectSrc) dest (Just pDest)
+  case mTile of
+    Just tile ->
+      do
+        let gid = tileGid tile
+        -- ^ Retrieve the sprite ID
+        -- sprite@(i, rectS) = ss ! gid
+        -- ^ Sprite, texture index, source rectangle
+        let mSp = Map.lookup gid ss
+        case mSp of
+          Just sprite@(i,rectS) ->
+            do
+              let rectSrc = toCRect rectS
+              let pDest = P $ fmap toCInt $ V2 (xt*tw) (yt*th)
+              SDL.surfaceBlit (surfs !! i) (Just rectSrc) dest (Just pDest)
+          Nothing -> return ()
+    Nothing -> return ()
   return ()
 
 -- | Blits one tile map layer onto destination surface
@@ -124,9 +133,9 @@ blitTileLayer dest rd lay@(Layer _ _ _ _ _) = do
       nt = w * h
       -- ^ Total number of tiles
       dat = layerData lay
-  blitTile dest ss surfs dat mapSizeT tileSize `mapM_` [0..nt]
+  blitTile dest ss surfs dat mapSizeT tileSize `mapM_` [0..nt-1]
   
-blitTileLayer _ _ _ = error "Only supports tile Tiled layer"
+blitTileLayer _ _ _ = error "[TODO]: Only supports tile Tiled layer now"
 
 -- * Constructing Renderer
 

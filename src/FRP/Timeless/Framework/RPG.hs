@@ -11,20 +11,23 @@ import FRP.Timeless
 import qualified SDL as SDL
 import qualified Data.Tiled as Tiled
 import FRP.Timeless.Framework.RPG.Render
+import FRP.Timeless.Framework.RPG.Scene.MapScene
 
 -- * Tests
 sTestOutBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
 sTestOutBox w rDest = proc _ -> do
   mkKleisli_ $ box -< ()
-  
   where
+    mlsIO = testMapLayerStack w rDest
     box :: () -> IO ()
     box _ = do
       SDL.clear rDest
+      mls <- mlsIO
+      runRenderLayerStack rDest Nothing mls
       SDL.present rDest
       return ()
 
-sTestMap = sLoadMap "examples/desert.tmx"
+testMapLayerStack win ren = mapRenderLayerStack win ren "desert.tmx"
 
 --sTestRenderMap w = sRenderMap w "examples/desert.tmx"
       
