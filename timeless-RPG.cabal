@@ -16,6 +16,8 @@ cabal-version:       >=1.10
 library
   hs-source-dirs:      src
   exposed-modules:     FRP.Timeless.Framework.RPG
+                     , FRP.Timeless.Framework.RPG.Render
+                     , FRP.Timeless.Framework.RPG.Render.TileLayer
   build-depends:       base >= 4.7 
                      , timeless
                      , sdl2 >= 2.0.0

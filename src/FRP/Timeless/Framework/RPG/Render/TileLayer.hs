@@ -7,7 +7,7 @@
 module FRP.Timeless.Framework.RPG.Render.TileLayer
        (
          module Data.Tiled
-       , TileRenderData
+       , TileRenderData(..)
        , renderTileLayer
        , loadTileRenderData
        , sLayerRenderer
@@ -37,7 +37,8 @@ type LayerRendererData = (SDL.Renderer, TileRenderData, Layer, SDL.Texture)
 -- | Contains data necessary for render function to work
 data TileRenderData = TileRenderData
     {
-      rdMapDesc :: TiledMap
+      rdRenderer :: SDL.Renderer
+    , rdMapDesc :: TiledMap
     , rdSpriteSheet :: SpriteSheet
     , rdTextures :: [SDL.Texture]
     }
@@ -140,7 +141,7 @@ loadTileRenderData w path = do
   -- | Load surfaces to Textures
   txs <- SDL.createTextureFromSurface ren `mapM` surfs
   -- | Make the TileRenderData
-  return $ TileRenderData tm ss txs
+  return $ TileRenderData ren tm ss txs
 
 -- | Using TileRenderData, create a layer renderer
 layerRendererData :: SDL.Window

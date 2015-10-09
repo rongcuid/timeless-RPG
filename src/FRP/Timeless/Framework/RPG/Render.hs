@@ -11,20 +11,28 @@ import qualified SDL as SDL
 import Linear
 import Linear.Affine
 import GHC.Word
+import Data.StateVar (get)
 
 import FRP.Timeless
 import FRP.Timeless.Framework.RPG.Render.TileLayer
 
 renderLayers :: SDL.Renderer
              -> [SDL.Texture]
-             -> IO ()
-renderLayers renDest txs =
-    mapM_ (\tx -> SDL.copy renDest tx Nothing Nothing) txs
+             -> IO SDL.Texture
+renderLayers renDest txs = do
+  mapM_ (\tx -> SDL.copy renDest tx Nothing Nothing) txs
+  mtx <- get $ SDL.rendererRenderTarget renDest
+  case mtx of
+    Just tx -> return tx
+    Nothing -> error "[BUG]: Somehow renDest does not have render target"
 
 sRenderMap :: SDL.Window
            -> FilePath
-           -> Signal s IO () ()
-sRenderMap win path = proc _ -> do
-  rd <- mkConstM_ $ loadTileRenderData win path -< ()
-  tx0 <- sLayerRenderer win 0 -< rd
-  returnA -< ()
+           -> Signal s IO () SDL.Texture
+sRenderMap win path =
+  proc _ -> do
+    rd <- mkConstM_ $ loadTileRenderData win path -< ()
+    tx0 <- sLayerRenderer win 0 -< rd
+    ren <- arr rdRenderer -< rd
+    txDest <- mkKleisli_ $ uncurry renderLayers -< (ren, [tx0])
+    returnA -< txDest

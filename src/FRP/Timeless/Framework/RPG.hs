@@ -13,24 +13,29 @@ import qualified Data.Tiled as Tiled
 import FRP.Timeless.Framework.RPG.Render
 
 -- * Tests
-sTestOutBox :: SDL.Renderer -> Signal s IO () ()
-sTestOutBox w = mkKleisli_ $ box w
+sTestOutBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
+sTestOutBox w rDest = proc _ -> do
+  tx <- sRenderMap w "desert.tmx" -< ()
+  mkKleisli_ $ box -< tx
+  
   where
-    box :: SDL.Renderer -> () -> IO ()
-    box w _ = do
-      SDL.clear w
-      SDL.present w
+    box :: SDL.Texture -> IO ()
+    box _ = do
+      SDL.clear rDest
+      SDL.present rDest
       return ()
 
 sTestMap = sLoadMap "examples/desert.tmx"
+
+--sTestRenderMap w = sRenderMap w "examples/desert.tmx"
       
 -- * App descriptions
 sLoadMap :: FilePath -> Signal s IO () Tiled.TiledMap
 sLoadMap file = mkConstM_ $ Tiled.loadMapFile file
 
-gameBox :: SDL.Renderer -> Signal s IO () ()
-gameBox w = proc _ -> do
-  sTestOutBox w -< ()
+gameBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
+gameBox w rDest = proc _ -> do
+  sTestOutBox w rDest -< ()
 
 gameSession = clockSession_
 
@@ -39,7 +44,7 @@ initApp = do
   SDL.initialize [SDL.InitEverything]
   window <- SDL.createWindow "RPG Framework" SDL.defaultWindow
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
-  return $ gameBox renderer
+  return $ gameBox window renderer
 
 runApp = do
   box <- initApp
