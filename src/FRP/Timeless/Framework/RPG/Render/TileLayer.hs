@@ -8,6 +8,7 @@ module FRP.Timeless.Framework.RPG.Render.TileLayer
        (
          module Data.Tiled
        , renderTileLayer
+       , sLayerRenderer
        )
        where
 
@@ -117,6 +118,8 @@ renderTileLayer _ _ _ = error "Only supports tile layer"
 
 -- * Constructing Renderer
 
+-- ** Functions
+
 layerRendererData :: SDL.Window -> Layer -> RenderData -> IO LayerRendererData
 layerRendererData win lay rd = do
   let (V2 w h, V2 tw th) = getTMDimensions $ rdMapDesc rd
@@ -135,6 +138,12 @@ layerRenderer (ren,rd,lay,tex) = do
   renderTileLayer ren rd lay
   return tex
 
+-- ** Signal
+
+sLayerRenderer :: SDL.Window -> Layer -> RenderData -> Signal s IO () SDL.Texture
+sLayerRenderer w l rd = lrd >>> mkKleisli_ layerRenderer
+    where
+      lrd = mkConstM_ $ layerRendererData w l rd
 
 -- * Utilities
 
