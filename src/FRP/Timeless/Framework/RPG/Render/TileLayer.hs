@@ -31,7 +31,7 @@ import qualified SDL.Raw.Types as RAW
 import FRP.Timeless
 import FRP.Timeless.Framework.RPG.Render.Types
 
-import qualified Debug.Trace as Trace
+import qualified Debug.Trace as Debug
 
 -- * Data Structures
 
@@ -152,6 +152,7 @@ loadTileRenderData ren path = do
   let tss = mapTilesets tm
   -- | Get all tileset image paths
   let tsPaths = (iSource . head . tsImages) <$> tss
+  Debug.trace ("loadTileRenderData: "++show tsPaths) $ return ()
   -- | Load all images to Surfaces
   surfs <- SDL.loadBMP `mapM` tsPaths
   -- | Make the TileRenderData

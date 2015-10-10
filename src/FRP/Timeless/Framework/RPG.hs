@@ -35,7 +35,7 @@ testMapLayerStack win ren = mapRenderLayerStack win ren "desert.tmx"
       
 -- * App descriptions
 sLoadMap :: FilePath -> Signal s IO () Tiled.TiledMap
-sLoadMap file = mkConstM_ $ Tiled.loadMapFile file
+sLoadMap file = mkConstM $ Tiled.loadMapFile file
 
 gameBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
 gameBox w rDest = proc _ -> do
