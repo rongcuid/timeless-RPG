@@ -25,10 +25,10 @@ mapRenderLayerStack win ren path = do
   trd <- loadTileRenderData ren path
 
   -- | Background tile map
-  --bg <- RenderLayer `liftM` createLayerRenderer win ren 0 trd
+  bg <- RenderLayer `liftM` createLayerRenderer win ren 0 trd
   -- Objects go here
   -- | Foreground tile map
   fg <- RenderLayer `liftM` createLayerRenderer win ren 1 trd
 
-  return [fg]
+  return [bg, fg]
 

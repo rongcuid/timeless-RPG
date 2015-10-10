@@ -172,16 +172,14 @@ createLayerRenderer win ren i rd = do
       -- ^ Height in pixels
       -- | The layer to be rendered
       lay = ((!! i) . mapLayers . rdMapDesc) rd
-  -- pFmt <- SDL.getWindowPixelFormat win
-  -- destTex <- SDL.createTexture ren pFmt SDL.TextureAccessTarget
-  --            (fmap fromIntegral $ V2 wp hp)
   let mask = V4 0xFF000000 0x00FF0000 0x0000FF00 0x000000FF
       bd = 32
-
+  -- | First, make a software surface
   destSurf <- SDL.createRGBSurface (fmap toCInt $ V2 wp hp) bd mask
+  -- | Then, blit the tilelayer on the surface
   blitTileLayer destSurf rd lay
+  -- | Make a texture out of surface
   destTex <- SDL.createTextureFromSurface ren destSurf
-  -- SDL.rendererRenderTarget renDest $= Just destTex
   return (rd, lay, destTex)
 
 -- * Utilities

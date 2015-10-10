@@ -1,14 +1,17 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <map version="1.0" orientation="orthogonal" width="40" height="40" tilewidth="32" tileheight="32">
  <tileset firstgid="1" source="desert.tsx"/>
- <layer name="Ground" width="40" height="40" opacity="0">
+ <tileset firstgid="49" name="Sewer" tilewidth="32" tileheight="32">
+  <image source="sewer_tileset.bmp" width="192" height="217"/>
+ </tileset>
+ <layer name="Ground" width="40" height="40">
   <data encoding="base64" compression="gzip">
    H4sIAAAAAAAAA+2Y2Q6CMBBFqzy4kLgm4hIRxQU39P+/zjFCIJMKpbbjaHg4UUJJD3dGmeALIXyL9IA+MLC8jw6xxG/FwOtX8ntmNQE8YMrAR0YDaAIO8rax1wyYV2ABdIAu4BJksQY2FQgt+kUFflvgBOy+6FeUX6iYJ4XfnqHfHXlhv4t49f+V2A/3HD4uywv3pQk/2e8gQvml38v8cK6m8jug49Snan6264s9McekfqqcDfi1EtoiexYV4SiuS1l+6NcX2XyR3msRruI62XU6fp7I5oshMCphrLhOdp3N3qMmEPI5h5NnQOijM5uZ2DdGn+/Oq/x35p8/oeL+plDxezrdk7WUfjeGfrivufnp1Dc/X1D53Sr44Sy55SerNWc/yvx0ZjNKv38hYODwK+CsuL0brGtcU/MZD494trQAGQAA
   </data>
  </layer>
- <layer name="Foreground" width="40" height="40">
+ <layer name="FG" width="40" height="40">
   <data encoding="base64" compression="gzip">
-   H4sIAAAAAAAAA+3OMQqAUBBDwX8NtVIrFbz/8UwtbCesxQw80mYMAAAAvjClOS3dRwpr2tLefaRwpDNd3UcK92sBAPi3B5y2t3YAGQAA
+   H4sIAAAAAAAAA+3QsQ2AMBQDUa8RUgEVZAbSwP4z4bRJHfGF7knXW5YAAAAAAH93ddVv5wxul9zisuLta5+tbnO74u1r/x3udEUx9z1dAAAAs73YGSbkABkAAA==
   </data>
  </layer>
 </map>

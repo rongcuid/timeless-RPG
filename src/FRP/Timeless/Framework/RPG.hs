@@ -13,6 +13,8 @@ import qualified Data.Tiled as Tiled
 import FRP.Timeless.Framework.RPG.Render
 import FRP.Timeless.Framework.RPG.Scene.MapScene
 
+import Data.StateVar (($=))
+
 -- * Tests
 sTestOutBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
 sTestOutBox w rDest = proc _ -> do
@@ -46,6 +48,7 @@ initApp = do
   SDL.initialize [SDL.InitEverything]
   window <- SDL.createWindow "RPG Framework" SDL.defaultWindow
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
+  SDL.rendererDrawBlendMode renderer $= SDL.BlendAlphaBlend
   return $ gameBox window renderer
 
 runApp = do
