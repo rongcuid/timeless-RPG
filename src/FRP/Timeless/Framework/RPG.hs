@@ -30,21 +30,17 @@ sTestOutBox w rDest = proc rls -> do
       SDL.present rDest
       return ()
 
+testMapLayerStack :: SDL.Window -> SDL.Renderer -> IO [RenderLayer]
 testMapLayerStack win ren = mapRenderLayerStack win ren "desert.tmx"
 
 --sTestRenderMap w = sRenderMap w "examples/desert.tmx"
       
 -- * App descriptions
-sLoadMap :: FilePath -> Signal s IO () Tiled.TiledMap
-sLoadMap file = mkConstM $ Tiled.loadMapFile file
 
 testGameBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
 testGameBox win ren = proc _ -> do
-  rls <- snapOnce <<< sRead <<< inhibitsAfter 1 -< ()
+  rls <- snapOnce <<< mkConstM (testMapLayerStack win ren) <<< inhibitsAfter 1 -< ()
   sTestOutBox win ren -< rls
-  where
-    sRead = (mkKleisli_ $ \_ -> testMapLayerStack win ren)
-    --sRead = (mkConstM $ testMapLayerStack win ren) >>> snapOnce
 
 gameSession = clockSession_
 
@@ -54,7 +50,7 @@ initApp = do
   window <- SDL.createWindow "RPG Framework" SDL.defaultWindow
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
   SDL.rendererDrawBlendMode renderer $= SDL.BlendAlphaBlend
-  rls <- testMapLayerStack window renderer
+  --rls <- testMapLayerStack window renderer
   return $ testGameBox window renderer --rls
 
 runApp = do
