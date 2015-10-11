@@ -24,10 +24,10 @@ mapRenderLayerStack :: SDL.Window
 mapRenderLayerStack win ren path = do
   trd <- loadTileRenderData ren path
 
-  -- | Background tile map
+  -- v Background tile map
   bg <- RenderLayer `liftM` createLayerRenderer win ren 0 trd
   -- Objects go here
-  -- | Foreground tile map
+  -- v Foreground tile map
   fg <- RenderLayer `liftM` createLayerRenderer win ren 1 trd
 
   return [bg, fg]

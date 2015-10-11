@@ -106,10 +106,8 @@ blitTile dest ss surfs dat sz@(V2 w h) ts@(V2 tw th) idx = do
   case mTile of
     Just tile ->
       do
-        let gid = tileGid tile
-        -- ^ Retrieve the sprite ID
-        -- sprite@(i, rectS) = ss ! gid
-        -- ^ Sprite, texture index, source rectangle
+        let gid = tileGid tile -- Retrieve the sprite ID
+        -- Sprite, texture index, source rectangle
         let mSp = Map.lookup gid ss
         case mSp of
           Just sprite@(i,rectS) ->
@@ -144,17 +142,17 @@ blitTileLayer _ _ _ = error "[TODO]: Only supports tile Tiled layer now"
 -- | Loads a TileRenderData from file
 loadTileRenderData :: SDL.Renderer -> FilePath -> IO TileRenderData
 loadTileRenderData ren path = do
-  -- | Load the map file
+  -- v Load the map file
   tm <- loadMapFile path
-  -- | Create Sprite sheet
   let ss = makeSpriteSheet tm
-  -- | All Tilesets
+      -- ^ Create Sprite sheet
   let tss = mapTilesets tm
-  -- | Get all tileset image paths
+      -- ^ All Tilesets
   let tsPaths = (iSource . head . tsImages) <$> tss
-  -- | Load all images to Surfaces
+      -- ^ Get all tileset image paths
+  -- v Load all images to Surfaces
   surfs <- SDL.loadBMP `mapM` tsPaths
-  -- | Make the TileRenderData
+  -- v Make the TileRenderData
   return $ TileRenderData ren tm ss surfs
 
 -- | Using TileRenderData, create a layer renderer
@@ -174,11 +172,11 @@ createLayerRenderer win ren i rd = do
       lay = ((!! i) . mapLayers . rdMapDesc) rd
   let mask = V4 0xFF000000 0x00FF0000 0x0000FF00 0x000000FF
       bd = 32
-  -- | First, make a software surface
+  -- v First, make a software surface
   destSurf <- SDL.createRGBSurface (fmap toCInt $ V2 wp hp) bd mask
-  -- | Then, blit the tilelayer on the surface
+  -- v Then, blit the tilelayer on the surface
   blitTileLayer destSurf rd lay
-  -- | Make a texture out of surface
+  -- v Make a texture out of surface
   destTex <- SDL.createTextureFromSurface ren destSurf
   return (rd, lay, destTex)
 

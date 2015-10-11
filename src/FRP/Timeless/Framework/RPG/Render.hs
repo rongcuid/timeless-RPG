@@ -36,13 +36,13 @@ runRenderLayer :: (RenderLayerClass r) =>
 runRenderLayer ren rt' rl = do
   let srcTex = texture rl
 
-  -- | Save the previous render target
+  -- v Save the previous render target
   rt <- get $ SDL.rendererRenderTarget ren
-  -- | Set render target
+  -- v Set render target
   SDL.rendererRenderTarget ren $= rt'
-  -- | Render
+  -- v Render
   SDL.copy ren srcTex Nothing Nothing
-  -- | Restore render target
+  -- v Restore render target
   SDL.rendererRenderTarget ren $= rt
 
 -- | Renders a stack of layers, in order
