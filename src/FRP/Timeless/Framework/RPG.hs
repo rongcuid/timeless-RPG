@@ -11,21 +11,22 @@ import FRP.Timeless
 import qualified SDL as SDL
 import qualified Data.Tiled as Tiled
 import FRP.Timeless.Framework.RPG.Render
+import FRP.Timeless.Framework.RPG.Render.Types
 import FRP.Timeless.Framework.RPG.Scene.MapScene
 
 import Data.StateVar (($=))
 
+import Debug.Trace as Debug
+
 -- * Tests
-sTestOutBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
-sTestOutBox w rDest = proc _ -> do
-  mkKleisli_ $ box -< ()
+sTestOutBox :: SDL.Window -> SDL.Renderer -> Signal s IO [RenderLayer] ()
+sTestOutBox w rDest = proc rls -> do
+  mkKleisli_ $ box -< rls
   where
-    mlsIO = testMapLayerStack w rDest
-    box :: () -> IO ()
-    box _ = do
+    box :: [RenderLayer] -> IO ()
+    box rls = do
       SDL.clear rDest
-      mls <- mlsIO
-      runRenderLayerStack rDest Nothing mls
+      runRenderLayerStack rDest Nothing rls
       SDL.present rDest
       return ()
 
@@ -37,9 +38,13 @@ testMapLayerStack win ren = mapRenderLayerStack win ren "desert.tmx"
 sLoadMap :: FilePath -> Signal s IO () Tiled.TiledMap
 sLoadMap file = mkConstM $ Tiled.loadMapFile file
 
-gameBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
-gameBox w rDest = proc _ -> do
-  sTestOutBox w rDest -< ()
+testGameBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
+testGameBox win ren = proc _ -> do
+  rls <- snapOnce <<< sRead <<< inhibitsAfter 1 -< ()
+  sTestOutBox win ren -< rls
+  where
+    sRead = (mkKleisli_ $ \_ -> testMapLayerStack win ren)
+    --sRead = (mkConstM $ testMapLayerStack win ren) >>> snapOnce
 
 gameSession = clockSession_
 
@@ -49,7 +54,8 @@ initApp = do
   window <- SDL.createWindow "RPG Framework" SDL.defaultWindow
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
   SDL.rendererDrawBlendMode renderer $= SDL.BlendAlphaBlend
-  return $ gameBox window renderer
+  rls <- testMapLayerStack window renderer
+  return $ testGameBox window renderer --rls
 
 runApp = do
   box <- initApp
