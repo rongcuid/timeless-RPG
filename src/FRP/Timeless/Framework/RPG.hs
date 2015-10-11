@@ -33,13 +33,11 @@ sTestOutBox w rDest = proc rls -> do
 testMapLayerStack :: SDL.Window -> SDL.Renderer -> IO [RenderLayer]
 testMapLayerStack win ren = mapRenderLayerStack win ren "desert.tmx"
 
---sTestRenderMap w = sRenderMap w "examples/desert.tmx"
-      
 -- * App descriptions
 
 testGameBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
 testGameBox win ren = proc _ -> do
-  rls <- snapOnce <<< mkConstM (testMapLayerStack win ren) <<< inhibitsAfter 1 -< ()
+  rls <- runAndHold $ mkConstM (testMapLayerStack win ren) -< ()
   sTestOutBox win ren -< rls
 
 gameSession = clockSession_

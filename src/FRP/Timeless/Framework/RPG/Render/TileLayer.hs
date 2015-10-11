@@ -69,14 +69,14 @@ makeSpriteSheet tm = go 0 tss Map.empty
   where
     tss = mapTilesets tm
     go :: Int -> [Tileset] -> SpriteSheet -> SpriteSheet
-    go lay (ts:tss) ss =
+    go tsID (ts:tss') ss =
         let gid0 = fromIntegral $ tsInitialGid ts
             nt = getNumTiles ts
             -- | [(gid, sprite)]
-            sprites = [ (fromIntegral gid, (lay, getRect ts gid0 gid)) |
+            sprites = [ (fromIntegral gid, (tsID, getRect ts gid0 gid)) |
                         gid <- [gid0..(gid0+nt-1)]
                       ]
-        in goInsert ss sprites
+        in go (tsID+1) tss' $ goInsert ss sprites
     go _ [] ss = ss
     -- | Insert the sprites using gid as key
     goInsert ss ((gid,sp):sps) = goInsert (Map.insert gid sp ss) sps
@@ -152,7 +152,6 @@ loadTileRenderData ren path = do
   let tss = mapTilesets tm
   -- | Get all tileset image paths
   let tsPaths = (iSource . head . tsImages) <$> tss
-  Debug.trace ("loadTileRenderData: "++show tsPaths) $ return ()
   -- | Load all images to Surfaces
   surfs <- SDL.loadBMP `mapM` tsPaths
   -- | Make the TileRenderData
