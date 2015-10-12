@@ -10,6 +10,8 @@ import Prelude hiding ((.), id)
 import FRP.Timeless
 import qualified SDL as SDL
 import qualified Data.Tiled as Tiled
+import Linear
+import Linear.Affine
 import FRP.Timeless.Framework.RPG.Render
 import FRP.Timeless.Framework.RPG.Render.Types
 import FRP.Timeless.Framework.RPG.Scene.MapScene
@@ -31,7 +33,8 @@ sTestOutBox ren = proc rls -> do
       return ()
 
 testMapScene :: SDL.Renderer -> IO Scene
-testMapScene ren = loadMapScene ren "desert.tmx" Nothing
+testMapScene ren = loadMapScene ren "desert.tmx"
+                   (Just $ cIntRect (P $ V2 0 0) (V2 800 600))
 
 -- * App descriptions
 
@@ -48,7 +51,7 @@ initApp = do
   window <- SDL.createWindow "RPG Framework" SDL.defaultWindow
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
   SDL.rendererDrawBlendMode renderer $= SDL.BlendAlphaBlend
-  return $ testGameBox renderer --rls
+  return $ testGameBox renderer
 
 runApp = do
   box <- initApp

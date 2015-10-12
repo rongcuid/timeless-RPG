@@ -51,7 +51,7 @@ runRenderLayerStack :: SDL.Renderer
 runRenderLayerStack ren rt' cam prj rls =
   runRenderLayer ren rt' cam prj `mapM_` rls
 
-
+-- | Renders a 'Scene' on to default render target
 viewScene :: SDL.Renderer
           -> Scene
           -> IO ()

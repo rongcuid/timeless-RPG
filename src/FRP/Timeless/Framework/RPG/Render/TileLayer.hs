@@ -181,19 +181,6 @@ createLayerRenderer ren i rd = do
 
 -- * Utilities
 
--- | Create a `SDL.Rectangle CInt`
-cIntRect :: (Integral n) => Point V2 n -> V2 n -> SDL.Rectangle CInt
-cIntRect pos@(P pv) size =
-  SDL.Rectangle (P $ fmap toCInt pv) (fmap toCInt size)
-
--- | Convert an `Integral` rectangle to `CInt`
-toCRect :: (Integral n) => SDL.Rectangle n -> SDL.Rectangle CInt
-toCRect (SDL.Rectangle pos size) = cIntRect pos size
-
--- | Convert to CInt
-toCInt :: (Integral n) => n -> CInt
-toCInt = fromIntegral
-
 -- | Gets X-Y coordinate from linear, row major, coordinates
 idx2XY :: V2 Int
        -- ^ Size of map in tiles

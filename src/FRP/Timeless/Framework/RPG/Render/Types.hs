@@ -10,6 +10,8 @@ module FRP.Timeless.Framework.RPG.Render.Types
 
 import qualified SDL as SDL
 import Foreign.C.Types (CInt)
+import Linear
+import Linear.Affine
 
 class RenderLayerClass r where
   texture :: r -> SDL.Texture
@@ -30,4 +32,20 @@ data Scene = Scene
       sceneLayers :: [RenderLayer]
     , sceneCamera :: Camera
     }
+
+-- * Type related utilities
+
+-- | Create a `SDL.Rectangle CInt`
+cIntRect :: (Integral n) => Point V2 n -> V2 n -> SDL.Rectangle CInt
+cIntRect pos@(P pv) size =
+  SDL.Rectangle (P $ fmap toCInt pv) (fmap toCInt size)
+
+-- | Convert an `Integral` rectangle to `CInt`
+toCRect :: (Integral n) => SDL.Rectangle n -> SDL.Rectangle CInt
+toCRect (SDL.Rectangle pos size) = cIntRect pos size
+
+-- | Convert to CInt
+toCInt :: (Integral n) => n -> CInt
+toCInt = fromIntegral
+
 
