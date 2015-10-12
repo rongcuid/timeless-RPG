@@ -9,6 +9,7 @@ module FRP.Timeless.Framework.RPG.Render.Types
        where
 
 import qualified SDL as SDL
+import Foreign.C.Types (CInt)
 
 class RenderLayerClass r where
   texture :: r -> SDL.Texture
@@ -19,5 +20,14 @@ instance RenderLayerClass RenderLayer where
   texture (RenderLayer l) = texture l
 
 -- | A 'Camera' is just a rectangle of view inside the world
-type Camera i = Maybe (SDL.Rectangle i)
+type Camera = Maybe (SDL.Rectangle CInt)
+
+-- | A 'Projector' is basically the same as a 'Camera'
+type Projector = Camera
+
+data Scene = Scene
+    {
+      sceneLayers :: [RenderLayer]
+    , sceneCamera :: Camera
+    }
 

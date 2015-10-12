@@ -32,3 +32,11 @@ mapRenderLayerStack ren path = do
 
   return [bg, fg]
 
+-- | Make a map 'Scene'
+loadMapScene :: SDL.Renderer
+               -> FilePath
+               -> Camera
+               -> IO Scene
+loadMapScene ren path cam = do
+  rls <- mapRenderLayerStack ren path
+  return $ Scene rls cam

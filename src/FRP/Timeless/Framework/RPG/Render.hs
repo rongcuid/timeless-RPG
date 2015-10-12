@@ -9,6 +9,7 @@ module FRP.Timeless.Framework.RPG.Render
          -- * Render Action
          runRenderLayer
        , runRenderLayerStack
+       , viewScene
        )
        where
 
@@ -25,33 +26,49 @@ import FRP.Timeless.Framework.RPG.Render.Types
 
 
 -- | An IO action to run a `RenderLayer`
-runRenderLayer :: (RenderLayerClass r) =>
-                  SDL.Renderer
+runRenderLayer :: SDL.Renderer
                -- ^ Target Renderer
                -> Maybe SDL.Texture
                -- ^ Render target, probably a Texture
-               -> r
-               -- ^ RenderLayer
+               -> Camera
+               -> Projector
+               -> RenderLayer
                -> IO ()
-runRenderLayer ren rt' rl = do
+runRenderLayer ren rt' cam prj rl = do
   let srcTex = texture rl
-
-  -- v Save the previous render target
-  rt <- get $ SDL.rendererRenderTarget ren
-  -- v Set render target
-  SDL.rendererRenderTarget ren $= rt'
-  -- v Render
-  SDL.copy ren srcTex Nothing Nothing
-  -- v Restore render target
-  SDL.rendererRenderTarget ren $= rt
+  renderProtectTarget ren rt' srcTex cam prj
 
 -- | Renders a stack of layers, in order
 runRenderLayerStack :: SDL.Renderer
                     -- ^ Target Renderer
                     -> Maybe SDL.Texture
                     -- ^ Render target, probably a Texture
+                    -> Camera
+                    -> Projector
                     -> [RenderLayer]
                     -- ^ Stack of `RenderLayer`s
                     -> IO ()
-runRenderLayerStack ren rt' rls = runRenderLayer ren rt' `mapM_` rls
+runRenderLayerStack ren rt' cam prj rls =
+  runRenderLayer ren rt' cam prj `mapM_` rls
 
+
+viewScene :: SDL.Renderer
+          -> Scene
+          -> IO ()
+viewScene ren s = 
+  let rls = sceneLayers s
+      cam = sceneCamera s
+  in 
+  runRenderLayerStack ren Nothing cam Nothing rls
+      
+
+renderProtectTarget ren rt' srcTex cam prj = do
+  -- v Save the previous render target
+  rt <- get $ SDL.rendererRenderTarget ren
+  -- v Set render target
+  SDL.rendererRenderTarget ren $= rt'
+  -- v Render
+  SDL.copy ren srcTex cam prj
+  -- v Restore render target
+  SDL.rendererRenderTarget ren $= rt
+  
