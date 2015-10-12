@@ -16,29 +16,44 @@ import FRP.Timeless.Framework.RPG.Scene.MapScene
 
 import Data.StateVar (($=))
 
+import Foreign.C.Types (CInt)
+
 import Debug.Trace as Debug
 
 -- * Tests
-sTestOutBox :: SDL.Window -> SDL.Renderer -> Signal s IO [RenderLayer] ()
-sTestOutBox w rDest = proc rls -> do
+sTestOutBox :: SDL.Renderer -> Maybe SDL.Texture -> Signal s IO [RenderLayer] ()
+sTestOutBox ren tDest = proc rls -> do
   mkKleisli_ $ box -< rls
   where
     box :: [RenderLayer] -> IO ()
     box rls = do
-      SDL.clear rDest
-      runRenderLayerStack rDest Nothing rls
-      SDL.present rDest
+      SDL.clear ren
+      runRenderLayerStack ren tDest rls
+      SDL.present ren
       return ()
 
 testMapLayerStack :: SDL.Window -> SDL.Renderer -> IO [RenderLayer]
 testMapLayerStack win ren = mapRenderLayerStack win ren "desert.tmx"
 
+testCamera :: SDL.Renderer
+           -> Signal s IO RenderLayer (Signal s IO (Camera CInt) ())
+testCamera ren = proc rl -> do
+  returnA -< mkKleisli_ $ f rl
+  where
+    f :: RenderLayer -> Camera CInt -> IO ()
+    f rl cam = do
+      let srcTex = texture rl
+      SDL.clear ren
+      SDL.copy ren srcTex cam Nothing
+      SDL.present ren
+      return ()
+
 -- * App descriptions
 
-testGameBox :: SDL.Window -> SDL.Renderer -> Signal s IO () ()
-testGameBox win ren = proc _ -> do
+testGameBox :: SDL.Window -> SDL.Renderer -> Maybe SDL.Texture -> Signal s IO () ()
+testGameBox win ren tex = proc _ -> do
   rls <- runAndHold $ mkConstM (testMapLayerStack win ren) -< ()
-  sTestOutBox win ren -< rls
+  sTestOutBox ren tex -< rls
 
 gameSession = clockSession_
 
@@ -48,8 +63,7 @@ initApp = do
   window <- SDL.createWindow "RPG Framework" SDL.defaultWindow
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
   SDL.rendererDrawBlendMode renderer $= SDL.BlendAlphaBlend
-  --rls <- testMapLayerStack window renderer
-  return $ testGameBox window renderer --rls
+  return $ testGameBox window renderer Nothing --rls
 
 runApp = do
   box <- initApp

@@ -16,6 +16,7 @@ import FRP.Timeless.Framework.RPG.Render
 import FRP.Timeless.Framework.RPG.Render.TileLayer
 import FRP.Timeless.Framework.RPG.Render.Types
 
+
 -- | The layer stack of Map scene
 mapRenderLayerStack :: SDL.Window
                     -> SDL.Renderer
