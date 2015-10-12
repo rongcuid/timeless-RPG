@@ -156,12 +156,11 @@ loadTileRenderData ren path = do
   return $ TileRenderData ren tm ss surfs
 
 -- | Using TileRenderData, create a layer renderer
-createLayerRenderer :: SDL.Window
-                  -> SDL.Renderer
+createLayerRenderer :: SDL.Renderer
                   -> Int
                   -> TileRenderData
                   -> IO LayerRendererData
-createLayerRenderer win ren i rd = do
+createLayerRenderer ren i rd = do
   let (V2 w h, V2 tw th) = getTMDimensions $ rdMapDesc rd
       -- ^ Map dimensions
       wp = w * tw

@@ -32,8 +32,8 @@ sTestOutBox ren tDest = proc rls -> do
       SDL.present ren
       return ()
 
-testMapLayerStack :: SDL.Window -> SDL.Renderer -> IO [RenderLayer]
-testMapLayerStack win ren = mapRenderLayerStack win ren "desert.tmx"
+testMapLayerStack :: SDL.Renderer -> IO [RenderLayer]
+testMapLayerStack ren = mapRenderLayerStack ren "desert.tmx"
 
 testCamera :: SDL.Renderer
            -> Signal s IO RenderLayer (Signal s IO (Camera CInt) ())
@@ -50,9 +50,9 @@ testCamera ren = proc rl -> do
 
 -- * App descriptions
 
-testGameBox :: SDL.Window -> SDL.Renderer -> Maybe SDL.Texture -> Signal s IO () ()
-testGameBox win ren tex = proc _ -> do
-  rls <- runAndHold $ mkConstM (testMapLayerStack win ren) -< ()
+testGameBox :: SDL.Renderer -> Maybe SDL.Texture -> Signal s IO () ()
+testGameBox ren tex = proc _ -> do
+  rls <- runAndHold $ mkConstM (testMapLayerStack ren) -< ()
   sTestOutBox ren tex -< rls
 
 gameSession = clockSession_
@@ -63,7 +63,7 @@ initApp = do
   window <- SDL.createWindow "RPG Framework" SDL.defaultWindow
   renderer <- SDL.createRenderer window (-1) SDL.defaultRenderer
   SDL.rendererDrawBlendMode renderer $= SDL.BlendAlphaBlend
-  return $ testGameBox window renderer Nothing --rls
+  return $ testGameBox renderer Nothing --rls
 
 runApp = do
   box <- initApp

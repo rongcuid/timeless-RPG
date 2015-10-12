@@ -18,18 +18,17 @@ import FRP.Timeless.Framework.RPG.Render.Types
 
 
 -- | The layer stack of Map scene
-mapRenderLayerStack :: SDL.Window
-                    -> SDL.Renderer
+mapRenderLayerStack :: SDL.Renderer
                     -> FilePath
                     -> IO [RenderLayer]
-mapRenderLayerStack win ren path = do
+mapRenderLayerStack ren path = do
   trd <- loadTileRenderData ren path
 
   -- v Background tile map
-  bg <- RenderLayer `liftM` createLayerRenderer win ren 0 trd
+  bg <- RenderLayer `liftM` createLayerRenderer ren 0 trd
   -- Objects go here
   -- v Foreground tile map
-  fg <- RenderLayer `liftM` createLayerRenderer win ren 1 trd
+  fg <- RenderLayer `liftM` createLayerRenderer ren 1 trd
 
   return [bg, fg]
 
